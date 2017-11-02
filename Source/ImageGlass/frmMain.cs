@@ -198,7 +198,7 @@ namespace ImageGlass
             {
                 //Mark as Image Error
                 GlobalSetting.IsImageError = true;
-                Text = $"{fileName} ({dirPath}) - {ImageInfo.GetFileSize(filePath)}";
+                Text = $"{fileName} - {dirPath}  |  {ImageInfo.GetFileSize(filePath)}  ::  ImageGlass";
 
                 picMain.Text = GlobalSetting.LangPack.Items["frmMain.picMain._ErrorText"];
                 picMain.Image = null;
@@ -492,7 +492,7 @@ namespace ImageGlass
 
             if (GlobalSetting.ImageList.Length < 1)
             {
-                this.Text = $"ImageGlass {fileinfo}";
+                this.Text = $"ImageGlass";
                 return;
             }
 
@@ -539,7 +539,7 @@ namespace ImageGlass
             }
 
             //Move image information to Window title
-            this.Text += "  |  " + fileinfo;
+            this.Text += "  |  " + fileinfo + "  ::  ImageGlass";
 
         }
         #endregion
