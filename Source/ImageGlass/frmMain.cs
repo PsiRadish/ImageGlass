@@ -149,20 +149,21 @@ namespace ImageGlass
             //Reset current index
             GlobalSetting.CurrentIndex = 0;
             string filePath = "";
+            string fileName = "";
             string dirPath = "";
 
             //Check path is file or directory?
             if (File.Exists(path))
             {
                 filePath = path;
+                fileName = Path.GetFileName(path);
 
                 // get directory
-                dirPath = (Path.GetDirectoryName(path) + "\\").Replace("\\\\", "\\");
-                dirPath = path.Substring(0, path.LastIndexOf("\\") + 1);
+                dirPath = path.Substring(0, path.LastIndexOf(@"\") + 1);
             }
             else if (Directory.Exists(path))
             {
-                dirPath = (path + "\\").Replace("\\\\", "\\");
+                dirPath = (path + @"\").Replace(@"\\", @"\");
             }
 
             //Declare a new list to store filename
@@ -197,7 +198,7 @@ namespace ImageGlass
             {
                 //Mark as Image Error
                 GlobalSetting.IsImageError = true;
-                Text = $"ImageGlass - {filePath} - {ImageInfo.GetFileSize(filePath)}";
+                Text = $"{fileName} ({dirPath}) - {ImageInfo.GetFileSize(filePath)}";
 
                 picMain.Text = GlobalSetting.LangPack.Items["frmMain.picMain._ErrorText"];
                 picMain.Image = null;
@@ -495,19 +496,21 @@ namespace ImageGlass
                 return;
             }
 
+            string filePath = GlobalSetting.ImageList.GetFileName(GlobalSetting.CurrentIndex);
+
             //Set the text of Window title
-            this.Text = "ImageGlass - " +
+            this.Text = Path.GetFileName(filePath) + " - " +
                         (GlobalSetting.CurrentIndex + 1) + "/" + GlobalSetting.ImageList.Length + " " +
-                        GlobalSetting.LangPack.Items["frmMain._Text"] + " - " +
-                        GlobalSetting.ImageList.GetFileName(GlobalSetting.CurrentIndex);
+                        GlobalSetting.LangPack.Items["frmMain._Text"] +
+                        " from " + Path.GetDirectoryName(filePath);
 
             if (GlobalSetting.IsImageError)
             {
                 try
                 {
-                    fileinfo = ImageInfo.GetFileSize(GlobalSetting.ImageList.GetFileName(GlobalSetting.CurrentIndex)) + "\t  |  ";
-                    fileinfo += Path.GetExtension(GlobalSetting.ImageList.GetFileName(GlobalSetting.CurrentIndex)).Replace(".", "").ToUpper() + "  |  ";
-                    fileinfo += File.GetCreationTime(GlobalSetting.ImageList.GetFileName(GlobalSetting.CurrentIndex)).ToString("yyyy/M/d HH:m:s");
+                    fileinfo = ImageInfo.GetFileSize(filePath) + "\t  |  ";
+                    fileinfo += Path.GetExtension(filePath).Replace(".", "").ToUpper() + "  |  ";
+                    fileinfo += File.GetCreationTime(filePath).ToString("yyyy/M/d HH:m:s");
                     _imageInfo = fileinfo;
                 }
                 catch { fileinfo = ""; }
@@ -526,8 +529,8 @@ namespace ImageGlass
                 }
                 else
                 {
-                    fileinfo += ImageInfo.GetFileSize(GlobalSetting.ImageList.GetFileName(GlobalSetting.CurrentIndex)) + "\t  |  ";
-                    fileinfo += File.GetCreationTime(GlobalSetting.ImageList.GetFileName(GlobalSetting.CurrentIndex)).ToString("yyyy/M/d HH:m:s");
+                    fileinfo += ImageInfo.GetFileSize(filePath) + "\t  |  ";
+                    fileinfo += File.GetCreationTime(filePath).ToString("yyyy/M/d HH:m:s");
 
                     _imageInfo = fileinfo;
 
