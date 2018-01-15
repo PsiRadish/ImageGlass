@@ -19,23 +19,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
+using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Linq;
+using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+
 using ImageGlass.Core;
+using ImageGlass.Library;
 using ImageGlass.Library.Image;
 using ImageGlass.Library.Comparer;
-using System.IO;
-using System.Diagnostics;
-using ImageGlass.Services.Configuration;
-using ImageGlass.Library;
-using System.Collections.Specialized;
-using ImageGlass.Services.InstanceManagement;
-using System.Drawing.Imaging;
-using ImageGlass.Theme;
-using System.Threading.Tasks;
 using ImageGlass.Library.WinAPI;
+using ImageGlass.Services.Configuration;
+using ImageGlass.Services.InstanceManagement;
+using ImageGlass.Theme;
 
 namespace ImageGlass
 {
@@ -49,6 +50,8 @@ namespace ImageGlass
             //Check DPI Scaling ratio
             DPIScaling.CurrentDPI = DPIScaling.GetSystemDpi();
             OnDpiChanged();
+
+            this.picMain.ImageChanged += picMain_ImageChanged;
         }
 
 
@@ -1925,6 +1928,66 @@ namespace ImageGlass
             }
         }
         
+        private void picMain_ImageChanged(object sender, EventArgs e)
+        {
+            if (picMain.Image == null)
+                return;
+
+            // change form icon to thumbnail of image
+            var source = picMain.Image;
+            Rectangle cropRect, scaleRect;
+            double scale;
+
+            if (source.Width > source.Height * 2)
+            {
+                cropRect = new Rectangle(0, 0, source.Height * 2, source.Height);
+                scaleRect = new Rectangle(0, 0, ICONSIZE, ICONSIZE / 2);
+                scale = (double)ICONSIZE / cropRect.Width;
+            }
+            else if (source.Height > source.Width * 2)
+            {
+                cropRect = new Rectangle(0, 0, source.Width, source.Width * 2);
+                scaleRect = new Rectangle(0, 0, ICONSIZE / 2, ICONSIZE);
+                scale = (double)ICONSIZE / cropRect.Height;
+            }
+            else
+            {
+                cropRect = new Rectangle(0, 0, source.Width, source.Height);
+                if (source.Width > source.Height)
+                {
+                    scale = (double)ICONSIZE / source.Width;
+                    scaleRect = new Rectangle(0, 0, ICONSIZE, (int)Math.Round(source.Height * scale));
+                }
+                else if (source.Height > source.Width)
+                {
+                    scale = (double)ICONSIZE / source.Height;
+                    scaleRect = new Rectangle(0, 0, (int)Math.Round(source.Width * scale), ICONSIZE);
+                }
+                else
+                {
+                    scale = (double)ICONSIZE / source.Width;
+                    scaleRect = new Rectangle(0, 0, ICONSIZE, ICONSIZE);
+                }
+            }
+
+            scaleRect.X = (ICONSIZE - scaleRect.Width) / 2;
+            scaleRect.Y = (ICONSIZE - scaleRect.Height) / 2;
+
+            var newIconBmp = new Bitmap(ICONSIZE, ICONSIZE, PixelFormat.Format32bppArgb);
+            using (Graphics g = Graphics.FromImage(newIconBmp))
+            {
+                g.Clear(Color.Transparent);
+
+                if (scale % 1 == 0) // if scale is a whole number, use nearest neighboor scaling
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+
+                g.DrawImage(source, scaleRect, cropRect, GraphicsUnit.Pixel);
+            }
+
+            this.Icon = Icon.FromHandle(newIconBmp.GetHicon());
+        }
+        private const int ICONSIZE = 24;
+
         #endregion
 
 
